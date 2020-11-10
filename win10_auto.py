@@ -11,6 +11,53 @@ from datetime import datetime
 from datetime import timedelta
 import socket
 
+
+def auto_down(url,filename):
+	global per
+	try:
+		urlretrieve(url,filename,jindu)
+		if per < 100:
+			print(100/0)
+	except Exception as error:
+		print(error)
+		count = 1
+		print(count)
+		while count <= 5:
+			try:
+				urlretrieve(url, filename,jindu)
+				if per < 100:
+					print(100/0)
+				break
+			except Exception as error:
+				print(error)
+				count += 1
+				print(count)
+		if count > 5:
+			print("下载失败")
+			if os.path.exists(filename):
+				os.remove(filename)
+ 
+#urlretrieve()的回调函数，显示当前的下载进度
+#a为已经下载的数据块
+#b为数据块大小
+#c为远程文件的大小
+global myper
+def jindu(a,b,c):
+	global per
+	if not a:
+		print("连接打开")
+	if c<0:
+		print("要下载的文件大小为0")
+	else:
+		global myper
+		per=100*a*b/c
+ 
+		if per>100:
+		   per=100
+		myper=per
+		print("当前下载进度为：" + '%.2f%%' % per)
+
+
 socket.setdefaulttimeout(30)
 sys.setrecursionlimit(1000000000)
 while True:
@@ -46,6 +93,8 @@ while True:
 				a = (i.get_text())
 				print((a.split('\n')[0]))
 				id = a.split(" ")[0][2:4]  # 获取编号如04、99，当编号大于40时认为是扰动无需下载
+				name = (a.split('\n')[0]).split()[-1]
+				print(name)
 				if int(id) < 40:
 					# print("There is tc")
 					grade = a.split(" ")[2] + a.split(" ")[3]
@@ -57,16 +106,14 @@ while True:
 							"2020"+ str.lower(str(basin))+ str(id) + '/4kmirimg/' + \
 								"2020"+ str.lower(str(basin))+ str(id) + '_4kmirimg_' + time_dl + ".gif"
 
-					name_img = "2020"+ str.lower(str(basin))+ str(id) + '_4kmirimg_' + time_dl + ".gif"
+					name_img = name + "_2020"+ str.lower(str(basin))+ str(id) + '_4kmirimg_' + time_dl + ".gif"
 					file_adr = 'E:/ssss/worm/'+ name_img  # 文件下载的位置加文件名称
 					if os.path.exists(file_adr):
 						print(file_adr + "已经存在无需下载")
 						pass
 					else:
 						try:
-							urlretrieve(add, file_adr)
-							print("下载" + name_img + "中......")
-							time.sleep(10)
+							auto_down(add, file_adr)
 						except Exception as f:
 							if cur_min >=45 or cur_hour ==9 or cur_hour == 15:
 								for i in range(1,10):
@@ -75,7 +122,7 @@ while True:
 												"2020"+ str.lower(str(basin))+ str(id) + '/4kmirimg/' + \
 													"2020"+ str.lower(str(basin))+ str(id) + '_4kmirimg_' + time_dl + ".gif"
 
-										name_img = "2020"+ str.lower(str(basin))+ str(id) + '_4kmirimg_' + time_dl + ".gif"
+										name_img = name + "_2020"+ str.lower(str(basin))+ str(id) + '_4kmirimg_' + time_dl + ".gif"
 										file_adr = 'E:/ssss/worm/'+ name_img  # 文件下载的位置加文件名称									
 										add_s = list(add)
 										add_s[-5] = str(i)
@@ -84,9 +131,7 @@ while True:
 										file_adr_s[-5] = str(i)
 										file_adr = ''.join(file_adr_s)
 										name_img = file_adr.split('\\')[-1]											
-										urlretrieve(add, file_adr)
-										print("下载" + name_img + "中......")
-										time.sleep(10)
+										auto_down(add, file_adr)
 										break
 									except :
 										try:
@@ -99,16 +144,14 @@ while True:
 													"2020"+ str.lower(str(basin))+ str(id) + '/4kmirimg/' + \
 														"2020"+ str.lower(str(basin))+ str(id) + '_4kmirimg_' + time_dl_new + ".gif"
 
-											name_img = "2020"+ str.lower(str(basin))+ str(id) + '_4kmirimg_' + time_dl_new + ".gif"
+											name_img = name + "_2020"+ str.lower(str(basin))+ str(id) + '_4kmirimg_' + time_dl_new + ".gif"
 											file_adr = 'E:/ssss/worm/'+ name_img  # 文件下载的位置加文件名称
 											if os.path.exists(file_adr):
 												print(file_adr + "已经存在无需下载")
 												break
 											else:
 												try:
-													urlretrieve(add, file_adr)
-													print("下载" + name_img + "中......")
-													time.sleep(10)
+													auto_down(add, file_adr)
 													break
 												except :
 													pass
@@ -116,7 +159,7 @@ while True:
 											pass	
 
 					name_tmp = file_adr.split('/')[-1]
-					if os.path.exists(file_adr) and os.path.getsize(file_adr) > 10000:
+					if os.path.exists(file_adr) and os.path.getsize(file_adr) > 102400:
 						try:
 							shutil.copy(file_adr, end_dir)
 							time.sleep(5)
@@ -128,7 +171,7 @@ while True:
 						except:
 							pass
 					else:
-						print("文件不存在，需要重新下载")
+						print("文件不存在或太小，需要重新下载")
 						flag = -1
 		print('@'*50)
 		if flag == 0:
